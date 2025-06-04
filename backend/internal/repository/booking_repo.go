@@ -219,3 +219,56 @@ func (r *BookingRepository) UpdateCompletedBookings(ctx context.Context) error {
 	_, err := r.collection.UpdateMany(ctx, filter, update)
 	return err
 }
+
+// FindUpcomingBookings ดึงข้อมูลการจองที่ใกล้ถึงเวลา
+func (r *BookingRepository) FindUpcomingBookings(ctx context.Context, beforeTime time.Time) ([]*models.Booking, error) {
+    // ตัดมิลลิวินาทีออกจาก beforeTime
+    beforeTime = beforeTime.Truncate(time.Minute)
+
+    // สร้าง filter โดยใช้ $expr เพื่อเปรียบเทียบเฉพาะชั่วโมงและนาที
+    filter := bson.M{
+        "$expr": bson.M{
+            "$and": []bson.M{
+                {"$lte": []interface{}{
+                    bson.M{"$dateToString": bson.M{"format": "%Y-%m-%d %H:%M", "date": "$start_time"}},
+                    beforeTime.Format("2006-01-02 15:04"),
+                }},
+				{"$eq": []interface{}{"$notification_sent", false}},
+            },
+        },
+    }
+
+    log.Printf("FindUpcomingBookings filter: %+v", filter) // เพิ่ม log เพื่อดู filter ที่ใช้
+
+    var bookings []*models.Booking
+    cursor, err := r.collection.Find(ctx, filter)
+    if err != nil {
+        log.Printf("Error fetching upcoming bookings: %v", err)
+        return nil, err
+    }
+    defer cursor.Close(ctx)
+
+    err = cursor.All(ctx, &bookings)
+    if err != nil {
+        log.Printf("Error decoding bookings: %v", err)
+        return nil, err
+    }
+
+    log.Printf("Upcoming bookings found: %+v", bookings) // เพิ่ม log เพื่อดูข้อมูลการจองที่ดึงออกมา
+
+    return bookings, nil
+}
+
+// UpdateBooking อัปเดตสถานะการแจ้งเตือน
+func (r *BookingRepository) UpdateBooking(ctx context.Context, booking *models.Booking) error {
+	filter := bson.M{"_id": booking.ID}
+	update := bson.M{"$set": bson.M{"notification_sent": booking.NotificationSent}}
+
+	_, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		log.Printf("Error updating booking notification status: %v", err)
+		return err
+	}
+
+	return nil
+}

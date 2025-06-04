@@ -14,6 +14,7 @@ import (
 type Claims struct {
 	StudentID string `json:"studentId"`
 	Role      string `json:"role"`
+	Eamil 	  string `json:"email,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -24,6 +25,7 @@ func GenerateToken(user *models.User, secret string, expiryHours int) (string, e
 	claims := &Claims{
 		StudentID: user.StudentID,
 		Role:      user.Role,
+		Eamil:     user.Email,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

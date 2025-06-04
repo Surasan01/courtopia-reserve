@@ -51,6 +51,17 @@ const BookingDialog = ({
       return;
     }
 
+    const currentTime = new Date();
+  const bookingStartTime = new Date(`${bookingDate}T${startTime}:00`);
+  if (currentTime > bookingStartTime) {
+    toast({
+      title: "ไม่สามารถจองคอร์ทได้",
+      description: "เวลาที่คุณเลือกเลยเวลาปัจจุบันแล้ว",
+      variant: "destructive",
+    });
+    return;
+  }
+  
     setIsLoading(true);
     
     try {

@@ -135,7 +135,7 @@ const Bookings = () => {
   const StatusBadge = ({ status }: { status: string }) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-green-500">กำลังจอง</Badge>;
+        return <Badge className="bg-green-500">จองแล้ว</Badge>;
       case 'completed':
         return <Badge className="bg-blue-500">จบแล้ว</Badge>;
       case 'cancelled':
