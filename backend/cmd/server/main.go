@@ -18,12 +18,23 @@ import (
 	"courtopia-reserve/backend/internal/repository"
 )
 
+func startScheduler(bookingRepo *repository.BookingRepository, userRepo *repository.UserRepository) {
+	ticker := time.NewTicker(1 * time.Minute)
+	go func() {
+		for range ticker.C {
+			log.Println("Running email notification scheduler...")
+			handlers.SendMail(bookingRepo, userRepo)
+		}
+	}()
+}
+
 func main() {
 	// โหลดค่า config
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("Error loading config: %v", err)
 	}
+
 	// เชื่อมต่อกับฐานข้อมูล
 	client, err := database.ConnectDB(cfg.MongoURI)
 	if err != nil {
@@ -40,6 +51,9 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	courtRepo := repository.NewCourtRepository(db)
 	bookingRepo := repository.NewBookingRepository(db)
+
+	// เริ่ม Scheduler สำหรับการส่งอีเมลแจ้งเตือน
+	startScheduler(bookingRepo, userRepo)
 
 	// Set Gin mode based on environment
 	if cfg.Environment == "production" {
@@ -76,6 +90,9 @@ func main() {
 	h := handlers.NewHandler(db, userRepo, courtRepo, bookingRepo, cfg.JWTSecret)
 	h.RegisterRoutes(r)
 
+	h = handlers.NewHandler(db, userRepo, courtRepo, bookingRepo, cfg.JWTSecret)
+	r.POST("/trigger-email-notifications", h.TriggerEmailNotifications)
+
 	// เริ่มต้น server
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.Port),
@@ -106,5 +123,4 @@ func main() {
 		log.Fatalf("Server shutdown error: %v", err)
 	}
 	log.Println("Server stopped")
-
 }
