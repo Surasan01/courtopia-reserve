@@ -47,19 +47,15 @@ const Login = () => {
         try {
             const response = await login(data.studentId, data.password);
 
-            // เข้าสู่ระบบสำเร็จ
             toast({
                 title: 'เข้าสู่ระบบสำเร็จ',
                 description: `ยินดีต้อนรับ ${response.name}`,
             });
 
-            // บันทึกข้อมูลผู้ใช้และ token
             authLogin(response.token, response.studentId, response.name, response.role);
 
-            // นำผู้ใช้ไปยังหน้าหลัก
             navigate('/');
         } catch (error) {
-            // แสดงข้อความผิดพลาด
             toast({
                 title: 'เข้าสู่ระบบไม่สำเร็จ',
                 description: error instanceof Error ? error.message : 'เกิดข้อผิดพลาด กรุณาลองอีกครั้ง',

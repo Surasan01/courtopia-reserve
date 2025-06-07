@@ -60,16 +60,13 @@ const Register = () => {
                 data.email || undefined
             );
 
-            // ลงทะเบียนสำเร็จ
             toast({
                 title: 'ลงทะเบียนสำเร็จ',
                 description: 'กรุณาเข้าสู่ระบบด้วยข้อมูลที่ลงทะเบียน',
             });
 
-            // นำผู้ใช้ไปยังหน้าเข้าสู่ระบบ
             navigate('/login');
         } catch (error) {
-            // แสดงข้อความผิดพลาด
             toast({
                 title: 'ลงทะเบียนไม่สำเร็จ',
                 description: error instanceof Error ? error.message : 'เกิดข้อผิดพลาด กรุณาลองอีกครั้ง',

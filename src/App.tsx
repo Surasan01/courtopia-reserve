@@ -8,7 +8,6 @@ import Index from '@/pages/Index';
 import Bookings from '@/pages/Bookings';
 import Profile from "@/pages/Profile";
 
-// Protected Route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
 
@@ -34,7 +33,6 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      {/* Fallback route */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

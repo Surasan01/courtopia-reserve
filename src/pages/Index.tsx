@@ -31,15 +31,12 @@ const Index = () => {
     const loadAvailableCourts = async () => {
       setIsLoading(true);
       try {
-        // Split the time range (e.g., "17:30 - 18:30")
         const [startTime, endTime] = selectedTime.split(" - ");
         
-        // Format the date as YYYY-MM-DD
         const formattedDate = format(selectedDate, "yyyy-MM-dd");
         
         const response = await fetchAvailableCourts(formattedDate, startTime, endTime);
         
-        // Transform the API response to match our Court interface
         const transformedCourts = response.courts.map((court: any) => ({
           courtNumber: court.courtNumber,
           name: `คอร์ท ${court.courtNumber}`,
@@ -55,7 +52,6 @@ const Index = () => {
           variant: 'destructive',
         });
         
-        // Fallback to dummy data if API fails
         setCourts([
           { courtNumber: 1, name: "คอร์ท 1", time: selectedTime, isAvailable: true },
           { courtNumber: 2, name: "คอร์ท 2", time: selectedTime, isAvailable: false },

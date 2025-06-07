@@ -11,7 +11,6 @@ import (
 	"courtopia-reserve/backend/pkg/utils"
 )
 
-// Handler holds the database client and other dependencies
 type Handler struct {
 	db          *mongo.Database
 	userRepo    *repository.UserRepository
@@ -20,7 +19,6 @@ type Handler struct {
 	jwtSecret   string
 }
 
-// NewHandler creates a new handler instance
 func NewHandler(
 	db *mongo.Database,
 	userRepo *repository.UserRepository,
@@ -37,10 +35,8 @@ func NewHandler(
 	}
 }
 
-// AuthMiddleware returns a middleware to verify JWT tokens
 func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// ดึง token จาก header
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
@@ -48,7 +44,6 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// ตรวจสอบรูปแบบ Bearer token
 		bearerToken := strings.Split(authHeader, " ")
 		if len(bearerToken) != 2 || strings.ToLower(bearerToken[0]) != "bearer" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization format"})
@@ -56,7 +51,6 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// ตรวจสอบความถูกต้องของ token
 		claims, err := utils.ValidateToken(bearerToken[1], h.jwtSecret)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
@@ -64,16 +58,13 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// เพิ่มข้อมูล user เข้าไปใน context
 		c.Set("user", claims)
 		c.Next()
 	}
 }
 
-// AdminMiddleware returns middleware to check admin privileges
 func (h *Handler) AdminMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// ดึงข้อมูล user จาก context
 		claims, exists := c.Get("user")
 		if !exists {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -81,7 +72,6 @@ func (h *Handler) AdminMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// ตรวจสอบว่าเป็น admin หรือไม่
 		if claims.(*utils.Claims).Role != "admin" {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Admin access required"})
 			c.Abort()
@@ -92,18 +82,15 @@ func (h *Handler) AdminMiddleware() gin.HandlerFunc {
 	}
 }
 
-// RegisterRoutes registers all API routes
 func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	api := r.Group("/api")
 
-	// Public routes
 	auth := api.Group("/auth")
 	{
 		auth.POST("/register", h.Register)
 		auth.POST("/login", h.Login)
 	}
 
-	// Public court routes
 	courts := api.Group("/courts")
 	{
 		courts.GET("", h.GetCourts)
@@ -111,7 +98,6 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 		courts.GET("/:id", h.GetCourt)
 	}
 
-	// Protected routes requiring authentication
 	bookings := api.Group("/bookings")
 	bookings.Use(h.AuthMiddleware())
 	{
@@ -124,12 +110,11 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	profile := api.Group("/profile")
 	profile.Use(h.AuthMiddleware())
 	{
-		profile.GET("", h.GetProfile)                   // ดึงข้อมูลโปรไฟล์
-		profile.PUT("", h.UpdateProfile)                // อัปเดตข้อมูลโปรไฟล์
-		profile.POST("/upload", h.UploadProfilePicture) // อัปโหลดรูปโปรไฟล์
+		profile.GET("", h.GetProfile)                   
+		profile.PUT("", h.UpdateProfile)                
+		profile.POST("/upload", h.UploadProfilePicture) 
 	}
 
-	// Admin routes
 	admin := api.Group("/admin")
 	admin.Use(h.AuthMiddleware(), h.AdminMiddleware())
 	{

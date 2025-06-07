@@ -11,19 +11,16 @@ import (
 	"courtopia-reserve/backend/internal/models"
 )
 
-// CourtRepository handles all database operations related to courts
 type CourtRepository struct {
 	collection *mongo.Collection
 }
 
-// NewCourtRepository creates a new court repository
 func NewCourtRepository(db *mongo.Database) *CourtRepository {
 	return &CourtRepository{
 		collection: db.Collection("courts"),
 	}
 }
 
-// FindAll finds all courts
 func (r *CourtRepository) FindAll(ctx context.Context) ([]*models.Court, error) {
 	var courts []*models.Court
 
@@ -42,7 +39,6 @@ func (r *CourtRepository) FindAll(ctx context.Context) ([]*models.Court, error) 
 	return courts, nil
 }
 
-// FindByID finds a court by ID
 func (r *CourtRepository) FindByID(ctx context.Context, id primitive.ObjectID) (*models.Court, error) {
 	var court models.Court
 
@@ -55,7 +51,6 @@ func (r *CourtRepository) FindByID(ctx context.Context, id primitive.ObjectID) (
 	return &court, nil
 }
 
-// FindByCourtNumber finds a court by its number
 func (r *CourtRepository) FindByCourtNumber(ctx context.Context, courtNumber int) (*models.Court, error) {
 	var court models.Court
 
@@ -68,7 +63,6 @@ func (r *CourtRepository) FindByCourtNumber(ctx context.Context, courtNumber int
 	return &court, nil
 }
 
-// FindActiveCourts finds all active courts
 func (r *CourtRepository) FindActiveCourts(ctx context.Context) ([]*models.Court, error) {
 	var courts []*models.Court
 
@@ -88,7 +82,6 @@ func (r *CourtRepository) FindActiveCourts(ctx context.Context) ([]*models.Court
 	return courts, nil
 }
 
-// UpdateStatus updates the active status of a court
 func (r *CourtRepository) UpdateStatus(ctx context.Context, id primitive.ObjectID, isActive bool) error {
 	filter := bson.M{"_id": id}
 	update := bson.M{"$set": bson.M{"is_active": isActive}}

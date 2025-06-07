@@ -37,7 +37,6 @@ const BookingDialog = ({
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   
-  // Extract start time and end time from courtTime (format: "HH:MM - HH:MM")
   const [startTime, endTime] = courtTime.split(" - ").map(t => t.replace(" น.", ""));
 
   const handleBooking = async () => {
@@ -79,7 +78,6 @@ const BookingDialog = ({
         description: `คุณได้จอง ${courtName} เวลา ${courtTime}`,
       });
       
-      // Navigate to bookings page
       navigate("/bookings");
     } catch (error) {
       toast({

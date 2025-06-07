@@ -53,7 +53,6 @@ export const register = async (studentId: string, password: string, name: string
     return response.json();
 };
 
-// Courts API
 export const fetchAvailableCourts = async (date: string, startTime: string, endTime: string) => {
     const response = await fetch(
         `${API_URL}/courts/available?date=${date}&startTime=${startTime}&endTime=${endTime}`
@@ -72,7 +71,6 @@ export const fetchAvailableCourts = async (date: string, startTime: string, endT
     return response.json();
 };
 
-// Bookings API - ต้องมี token
 export const fetchUserBookings = async (token: string) => {
     const response = await fetch(`${API_URL}/bookings`, {
         headers: {
@@ -137,7 +135,6 @@ export const cancelBooking = async (token: string, bookingId: string) => {
     return response.json();
 };
 
-// ดึงข้อมูลโปรไฟล์ผู้ใช้
 export const getProfile = async (token: string) => {
     const response = await fetch(`${API_URL}/profile`, {
         method: 'GET',
@@ -159,7 +156,6 @@ export const getProfile = async (token: string) => {
     return response.json();
 };
 
-// อัปเดตข้อมูลโปรไฟล์ผู้ใช้
 export const updateProfile = async (token: string, name: string, email?: string) => {
     const response = await fetch(`${API_URL}/profile`, {
         method: 'PUT',
@@ -183,15 +179,14 @@ export const updateProfile = async (token: string, name: string, email?: string)
     return response.json();
 };
 
-// อัปโหลดรูปโปรไฟล์ผู้ใช้
 export const uploadProfilePicture = async (token: string, file: File) => {
     const formData = new FormData();
-    formData.append("profilePicture", file); // เปลี่ยนชื่อฟิลด์ให้ตรงกับฝั่งเซิร์ฟเวอร์
+    formData.append("profilePicture", file);
 
     const response = await fetch(`${API_URL}/profile/upload`, {
         method: "POST",
         headers: {
-            Authorization: `Bearer ${token}`, // ส่ง token สำหรับการยืนยันตัวตน
+            Authorization: `Bearer ${token}`,
         },
         body: formData,
     });

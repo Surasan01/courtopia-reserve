@@ -11,7 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-// GetProfile ดึงข้อมูลโปรไฟล์ของผู้ใช้จาก JWT
 func (h *Handler) GetProfile(c *gin.Context) {
 	claims := c.MustGet("user").(*utils.Claims)
 
@@ -30,7 +29,6 @@ func (h *Handler) GetProfile(c *gin.Context) {
 	})
 }
 
-// UpdateProfile อัปเดตข้อมูลโปรไฟล์ของผู้ใช้
 func (h *Handler) UpdateProfile(c *gin.Context) {
 	claims := c.MustGet("user").(*utils.Claims)
 
@@ -43,7 +41,6 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	// อัปเดตข้อมูลใน DB
 	filter := bson.M{"student_id": claims.StudentID}
 	update := bson.M{
 		"$set": bson.M{
@@ -62,34 +59,27 @@ func (h *Handler) UpdateProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Profile updated successfully"})
 }
 
-// UploadProfilePicture อัปโหลดรูปโปรไฟล์ของผู้ใช้
 func (h *Handler) UploadProfilePicture(c *gin.Context) {
 	claims := c.MustGet("user").(*utils.Claims)
 
-	// รับไฟล์จาก request
 	file, err := c.FormFile("profilePicture")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to upload file"})
 		return
 	}
 
-	// ตั้งชื่อไฟล์ใหม่เพื่อหลีกเลี่ยงการชนกัน
 	filename := fmt.Sprintf("%s_%d_%s", claims.StudentID, time.Now().Unix(), file.Filename)
 
-	// กำหนด path สำหรับจัดเก็บไฟล์ (ตัวอย่าง: local storage)
 	filePath := fmt.Sprintf("uploads/profile_pictures/%s", filename)
 
-	// บันทึกไฟล์ลงใน path ที่กำหนด
 	if err := c.SaveUploadedFile(file, filePath); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
 		return
 	}
 
-	// สร้าง URL แบบเต็มสำหรับรูปโปรไฟล์
-	baseURL := "http://localhost:8000" // เปลี่ยนเป็นโดเมนหรือ IP ของเซิร์ฟเวอร์จริง
+	baseURL := "http://localhost:8000" 
 	fullURL := fmt.Sprintf("%s/%s", baseURL, filePath)
 
-	// อัปเดต URL ของรูปโปรไฟล์ในฐานข้อมูล
 	filter := bson.M{"student_id": claims.StudentID}
 	update := bson.M{
 		"$set": bson.M{

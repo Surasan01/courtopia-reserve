@@ -26,7 +26,6 @@ const Bookings = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // แยกการจองตามสถานะ
   const activeBookings = bookings.filter(booking => booking.status === 'active');
   const completedBookings = bookings.filter(booking => booking.status === 'completed');
   const cancelledBookings = bookings.filter(booking => booking.status === 'cancelled');
@@ -48,7 +47,6 @@ const Bookings = () => {
           return;
         }
 
-        // Transform the API response to match our Booking interface
         const transformedBookings = response.map((booking: any) => ({
           id: booking.id,
           courtNumber: booking.courtNumber,
@@ -66,7 +64,6 @@ const Bookings = () => {
           variant: 'destructive',
         });
         
-        // ไม่ใช้ข้อมูลตัวอย่างในโปรดักชันจริง
         setBookings([]);
       } finally {
         setIsLoading(false);
@@ -82,7 +79,6 @@ const Bookings = () => {
     try {
       await cancelBooking(user.token, id);
 
-      // Update the booking status instead of removing it
       setBookings(bookings.map(booking => 
         booking.id === id 
           ? { ...booking, status: 'cancelled' } 
@@ -102,7 +98,6 @@ const Bookings = () => {
     }
   };
 
-  // Component สำหรับแสดงการจอง
   const BookingCard = ({ booking, showCancelButton = false }: { booking: Booking, showCancelButton?: boolean }) => (
     <div key={booking.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-wrap md:flex-nowrap justify-between items-center">
       <div className="mb-4 md:mb-0 flex-1">
@@ -131,7 +126,6 @@ const Bookings = () => {
     </div>
   );
 
-  // Component สำหรับแสดงสถานะ
   const StatusBadge = ({ status }: { status: string }) => {
     switch (status) {
       case 'active':

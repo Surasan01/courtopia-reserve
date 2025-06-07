@@ -13,19 +13,16 @@ import (
 	"courtopia-reserve/backend/internal/models"
 )
 
-// BookingRepository handles all database operations related to bookings
 type BookingRepository struct {
 	collection *mongo.Collection
 }
 
-// NewBookingRepository creates a new booking repository
 func NewBookingRepository(db *mongo.Database) *BookingRepository {
 	return &BookingRepository{
 		collection: db.Collection("bookings"),
 	}
 }
 
-// Create creates a new booking
 func (r *BookingRepository) Create(ctx context.Context, booking *models.Booking) error {
 	booking.CreatedAt = time.Now()
 	booking.UpdatedAt = time.Now()
@@ -35,7 +32,6 @@ func (r *BookingRepository) Create(ctx context.Context, booking *models.Booking)
 	return err
 }
 
-// FindByID finds a booking by ID
 func (r *BookingRepository) FindByID(ctx context.Context, id primitive.ObjectID) (*models.Booking, error) {
 	var booking models.Booking
 
@@ -48,13 +44,11 @@ func (r *BookingRepository) FindByID(ctx context.Context, id primitive.ObjectID)
 	return &booking, nil
 }
 
-// FindByStudentID finds all bookings by student ID
 func (r *BookingRepository) FindByStudentID(ctx context.Context, studentID string) ([]*models.Booking, error) {
 	var bookings []*models.Booking
 
 	filter := bson.M{"student_id": studentID}
 
-	// แก้ไขการกำหนด sort option ให้ถูกต้อง - ใช้ชุดของ sort criteria แทน map
 	opts := options.Find().SetSort(bson.D{
 		{Key: "booking_date", Value: -1},
 		{Key: "start_time", Value: -1},
@@ -73,7 +67,6 @@ func (r *BookingRepository) FindByStudentID(ctx context.Context, studentID strin
 		return nil, err
 	}
 
-	// ถ้าไม่มีข้อมูล ให้คืนค่าเป็น array ว่าง ไม่ใช่ error
 	if bookings == nil {
 		return []*models.Booking{}, nil
 	}
@@ -81,7 +74,6 @@ func (r *BookingRepository) FindByStudentID(ctx context.Context, studentID strin
 	return bookings, nil
 }
 
-// / FindActiveBookingsByStudentID finds active bookings by student ID
 func (r *BookingRepository) FindActiveBookingsByStudentID(ctx context.Context, studentID string) ([]*models.Booking, error) {
 	var bookings []*models.Booking
 
@@ -91,7 +83,6 @@ func (r *BookingRepository) FindActiveBookingsByStudentID(ctx context.Context, s
 		"end_time":   bson.M{"$gte": time.Now()},
 	}
 
-	// แก้ไขส่วนนี้: เปลี่ยนจาก bson.M เป็น bson.D
 	opts := options.Find().SetSort(bson.D{
 		{Key: "booking_date", Value: 1},
 		{Key: "start_time", Value: 1},
@@ -111,7 +102,6 @@ func (r *BookingRepository) FindActiveBookingsByStudentID(ctx context.Context, s
 	return bookings, nil
 }
 
-// Update updates an existing booking
 func (r *BookingRepository) Update(ctx context.Context, booking *models.Booking) error {
 	booking.UpdatedAt = time.Now()
 
@@ -122,7 +112,6 @@ func (r *BookingRepository) Update(ctx context.Context, booking *models.Booking)
 	return err
 }
 
-// CancelBooking cancels a booking by updating its status
 func (r *BookingRepository) CancelBooking(ctx context.Context, id primitive.ObjectID) error {
 	filter := bson.M{"_id": id}
 	update := bson.M{"$set": bson.M{
@@ -134,13 +123,10 @@ func (r *BookingRepository) CancelBooking(ctx context.Context, id primitive.Obje
 	return err
 }
 
-// IsCourtAvailable checks if a court is available at the specified time
 func (r *BookingRepository) IsCourtAvailable(ctx context.Context, courtNumber int, bookingDate time.Time, startTime time.Time, endTime time.Time) (bool, error) {
-	// Create dates for the start and end of the booking day
 	startOfDay := time.Date(bookingDate.Year(), bookingDate.Month(), bookingDate.Day(), 0, 0, 0, 0, bookingDate.Location())
 	endOfDay := time.Date(bookingDate.Year(), bookingDate.Month(), bookingDate.Day(), 23, 59, 59, 999999999, bookingDate.Location())
 
-	// Check for overlapping bookings
 	filter := bson.M{
 		"court_number": courtNumber,
 		"booking_date": bson.M{
@@ -172,9 +158,7 @@ func (r *BookingRepository) IsCourtAvailable(ctx context.Context, courtNumber in
 	return count == 0, nil
 }
 
-// GetAvailableCourts returns all available courts at the specified time
 func (r *BookingRepository) GetAvailableCourts(ctx context.Context, bookingDate time.Time, startTime time.Time, endTime time.Time, courtRepo *CourtRepository) ([]*models.CourtAvailability, error) {
-	// Get all active courts
 	courts, err := courtRepo.FindActiveCourts(ctx)
 	if err != nil {
 		return nil, err
@@ -182,7 +166,6 @@ func (r *BookingRepository) GetAvailableCourts(ctx context.Context, bookingDate 
 
 	var availabilities []*models.CourtAvailability
 
-	// Check availability for each court
 	for _, court := range courts {
 		isAvailable, err := r.IsCourtAvailable(ctx, court.CourtNumber, bookingDate, startTime, endTime)
 		if err != nil {
@@ -198,11 +181,9 @@ func (r *BookingRepository) GetAvailableCourts(ctx context.Context, bookingDate 
 	return availabilities, nil
 }
 
-// เพิ่มฟังก์ชันใหม่เพื่อตรวจสอบและอัปเดตสถานะการจองที่สิ้นสุดแล้ว
 func (r *BookingRepository) UpdateCompletedBookings(ctx context.Context) error {
 	now := time.Now()
 
-	// ค้นหาการจองที่กำลังใช้งานอยู่แต่เวลาสิ้นสุดผ่านไปแล้ว
 	filter := bson.M{
 		"status":   "active",
 		"end_time": bson.M{"$lt": now},
@@ -215,17 +196,13 @@ func (r *BookingRepository) UpdateCompletedBookings(ctx context.Context) error {
 		},
 	}
 
-	// อัปเดตหลายรายการพร้อมกัน
 	_, err := r.collection.UpdateMany(ctx, filter, update)
 	return err
 }
 
-// FindUpcomingBookings ดึงข้อมูลการจองที่ใกล้ถึงเวลา
 func (r *BookingRepository) FindUpcomingBookings(ctx context.Context, beforeTime time.Time) ([]*models.Booking, error) {
-    // ตัดมิลลิวินาทีออกจาก beforeTime
     beforeTime = beforeTime.Truncate(time.Minute)
 
-    // สร้าง filter โดยใช้ $expr เพื่อเปรียบเทียบเฉพาะชั่วโมงและนาที
     filter := bson.M{
         "$expr": bson.M{
             "$and": []bson.M{
@@ -238,7 +215,7 @@ func (r *BookingRepository) FindUpcomingBookings(ctx context.Context, beforeTime
         },
     }
 
-    log.Printf("FindUpcomingBookings filter: %+v", filter) // เพิ่ม log เพื่อดู filter ที่ใช้
+    log.Printf("FindUpcomingBookings filter: %+v", filter) 
 
     var bookings []*models.Booking
     cursor, err := r.collection.Find(ctx, filter)
@@ -254,12 +231,11 @@ func (r *BookingRepository) FindUpcomingBookings(ctx context.Context, beforeTime
         return nil, err
     }
 
-    log.Printf("Upcoming bookings found: %+v", bookings) // เพิ่ม log เพื่อดูข้อมูลการจองที่ดึงออกมา
+    log.Printf("Upcoming bookings found: %+v", bookings) 
 
     return bookings, nil
 }
 
-// UpdateBooking อัปเดตสถานะการแจ้งเตือน
 func (r *BookingRepository) UpdateBooking(ctx context.Context, booking *models.Booking) error {
 	filter := bson.M{"_id": booking.ID}
 	update := bson.M{"$set": bson.M{"notification_sent": booking.NotificationSent}}

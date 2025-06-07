@@ -10,7 +10,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// Claims represents JWT claims
 type Claims struct {
 	StudentID string `json:"studentId"`
 	Role      string `json:"role"`
@@ -18,7 +17,6 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-// GenerateToken creates a new JWT token for a user
 func GenerateToken(user *models.User, secret string, expiryHours int) (string, error) {
 	expirationTime := time.Now().Add(time.Duration(expiryHours) * time.Hour)
 
@@ -39,13 +37,11 @@ func GenerateToken(user *models.User, secret string, expiryHours int) (string, e
 	return tokenString, err
 }
 
-// ValidateToken validates the JWT token
 func ValidateToken(tokenString string, secret string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(
 		tokenString,
 		&Claims{},
 		func(token *jwt.Token) (interface{}, error) {
-			// ตรวจสอบ algorithm ที่ใช้
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}

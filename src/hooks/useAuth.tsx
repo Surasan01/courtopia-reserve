@@ -22,7 +22,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // ตรวจสอบว่ามี user ที่บันทึกไว้ใน localStorage หรือไม่
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
             try {
